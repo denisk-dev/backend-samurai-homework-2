@@ -1,7 +1,6 @@
 import request from "supertest";
 import { app } from "../../src/index";
 import { blogsTestManager } from "../utils/blogs-manager";
-import e from "express";
 
 //LIST OF TODOS
 //TODO tests need to be isolated from each other
@@ -244,9 +243,9 @@ describe("Blogs", () => {
       isAuthorized: true,
     });
 
-    const responseDelete = await request(app).delete(
-      `/blogs/${response.body.id}`
-    );
+    const responseDelete = await request(app)
+      .delete(`/blogs/${response.body.id}`)
+      .set("Authorization", "Basic YWRtaW46cXdlcnR5");
     expect(responseDelete.statusCode).toBe(204);
 
     // now test that the blog was deleted
@@ -266,7 +265,9 @@ describe("Blogs", () => {
       isAuthorized: true,
     });
 
-    const responseDelete = await request(app).delete(`/blogs/123`);
+    const responseDelete = await request(app)
+      .delete(`/blogs/123`)
+      .set("Authorization", "Basic YWRtaW46cXdlcnR5");
     expect(responseDelete.statusCode).toBe(404);
 
     // now test that the blog was not deleted
@@ -286,14 +287,10 @@ describe("Blogs", () => {
       isAuthorized: true,
     });
 
-    const responseDelete = await request(app).delete(
-      `/blogs/${response.body.id}`
-    );
-    expect(responseDelete.statusCode).toBe(204);
-
     const responseDeleteUnauthorized = await request(app).delete(
       `/blogs/${response.body.id}`
     );
+
     expect(responseDeleteUnauthorized.statusCode).toBe(401);
 
     // now test that the blog was not deleted
