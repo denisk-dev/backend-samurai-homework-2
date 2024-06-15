@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "nodemon --inspect dist/index.js",
     "watch": "tsc -w",
-    "test": "jest --detectOpenHandles --forceExit"
+    "test": "jest --detectOpenHandles --runInBand --forceExit"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
+    "mongodb": "^6.7.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

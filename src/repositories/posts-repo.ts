@@ -1,7 +1,8 @@
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
+import { client } from "./db";
+import { ObjectId } from "mongodb";
 
 export type Post = {
-  id: ReturnType<typeof uuidv4>;
   title: string;
   shortDescription: string;
   content: string;
@@ -9,51 +10,28 @@ export type Post = {
   blogName: string;
 };
 
-export let posts: Array<Post> = [
-  // {
-  //   id: "acxvsfsf23",
-  //   title: "Post 1",
-  //   shortDescription: "Content 1",
-  //   content: "Lorem Lorem Lorem",
-  //   blogId: "24234ssfgd",
-  //   blogName: "Blog 1",
-  // },
-];
+const posts = client.db("samurai").collection("posts");
 
 export const postsRepository = {
-  create(post: Post) {
-    if (post) {
-      posts.push(post);
-      return true;
-    } else {
-      return false;
-    }
+  async create(post: Post) {
+    const result = await posts.insertOne(post);
+    return result.insertedId.toString();
   },
-  findAll() {
-    return posts;
+  async findAll() {
+    return posts.find().toArray();
   },
-  findById(id: string) {
-    return posts.find((post) => post.id === id);
+  async findById(id: string) {
+    return posts.findOne({ _id: new ObjectId(id) });
   },
-  deleteById(id: string) {
-    const postIndex = posts.findIndex((post) => post.id === id);
-    if (postIndex !== -1) {
-      posts.splice(postIndex, 1);
-      return true;
-    } else {
-      return false;
-    }
+  async deleteById(id: string) {
+    const result = await posts.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount === 1;
   },
-  updateById(id: string, post: Post) {
-    const postIndex = posts.findIndex((post) => post.id === id);
-    if (postIndex !== -1) {
-      posts[postIndex] = post;
-      return true;
-    } else {
-      return false;
-    }
+  async updateById(id: string, post: Post) {
+    const result = await posts.replaceOne({ _id: new ObjectId(id) }, post);
+    return result.modifiedCount === 1;
   },
-  deleteAll() {
-    posts = [];
+  async deleteAll() {
+    await posts.drop();
   },
 };

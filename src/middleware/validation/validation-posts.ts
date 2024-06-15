@@ -33,8 +33,8 @@ export const createUpdateBodyValidationMiddleware = [
     .withMessage("Blog ID is required")
     .isString()
     .withMessage("Blog ID must be a string")
-    .custom((value, { req }) => {
-      const blog = blogsRepository.findById(value);
+    .custom(async (value, { req }) => {
+      const blog = await blogsRepository.findById(value);
 
       if (!blog) {
         return false;

@@ -1,6 +1,5 @@
 import express, { Request, Response } from "express";
 import { blogsRepository } from "../repositories/blogs-repo";
-import { v4 as uuidv4 } from "uuid";
 import { createUpdateBodyValidationMiddleware } from "../middleware/validation/validation-blogs";
 import { sendErrorsIfAnyMiddleware } from "../middleware/validation/validation-universal";
 import { basicAuthMiddleware } from "../middleware/auth/basic";
@@ -8,17 +7,17 @@ import { basicAuthMiddleware } from "../middleware/auth/basic";
 const router = express.Router();
 
 // Read all blogs
-router.get("/", (req: Request, res: Response) => {
-  const blogs = blogsRepository.findAll();
+router.get("/", async (req: Request, res: Response) => {
+  const blogs = await blogsRepository.findAll();
   res.status(200).json(blogs);
 });
 
 // Read one blog
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
-  const blog = blogsRepository.findById(id);
+  const blog = await blogsRepository.findById(id);
   if (blog) {
-    res.status(200).json(blog);
+    res.status(200).json({ ...blog, id: blog._id, _id: undefined });
   } else {
     res.sendStatus(404);
   }
@@ -31,19 +30,23 @@ router.post(
   "/",
   createUpdateBodyValidationMiddleware,
   sendErrorsIfAnyMiddleware,
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     const { name, description, websiteUrl } = req.body;
 
-    const id = uuidv4();
-
     const blog = {
-      id,
       name,
       description,
       websiteUrl,
     };
-    blogsRepository.create(blog);
-    return res.status(201).json(blogsRepository.findById(id));
+    const createdId = await blogsRepository.create(blog);
+
+    const createdBlog = await blogsRepository.findById(createdId);
+
+    if (!createdBlog) return res.sendStatus(500);
+
+    return res
+      .status(201)
+      .json({ ...createdBlog, id: createdBlog._id.toString(), _id: undefined });
   }
 );
 
@@ -52,18 +55,17 @@ router.put(
   "/:id",
   createUpdateBodyValidationMiddleware,
   sendErrorsIfAnyMiddleware,
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     const id = req.params.id;
     const { name, description, websiteUrl } = req.body;
 
-    const updated = blogsRepository.updateById(id, {
-      id,
+    const isUpdated = await blogsRepository.updateById(id, {
       name,
       description,
       websiteUrl,
     });
 
-    if (updated) {
+    if (isUpdated) {
       res.sendStatus(204);
     } else {
       res.sendStatus(404);
@@ -72,14 +74,18 @@ router.put(
 );
 
 // Delete blog
-router.delete("/:id", (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
-  const blog = blogsRepository.findById(id);
-  if (blog) {
-    blogsRepository.deleteById(id);
-    res.sendStatus(204);
+  const blog = await blogsRepository.findById(id);
+  if (!blog) {
+    return res.sendStatus(404);
+  }
+
+  const isDeleted = await blogsRepository.deleteById(id);
+  if (isDeleted) {
+    return res.sendStatus(204);
   } else {
-    res.sendStatus(404);
+    return res.sendStatus(500);
   }
 });
 

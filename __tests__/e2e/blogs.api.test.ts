@@ -1,6 +1,12 @@
 import request from "supertest";
-import { app } from "../../src/index";
+import { app } from "../../src/setting";
 import { blogsTestManager } from "../utils/blogs-manager";
+import dotenv from "dotenv";
+import { MongoClient } from "mongodb";
+dotenv.config();
+
+const dbName = "blogs";
+const mongoURI = process.env.MONGO_URI || `mongodb://0.0.0.0:27017/${dbName}`;
 
 //LIST OF TODOS
 //TODO tests need to be isolated from each other
@@ -11,9 +17,19 @@ import { blogsTestManager } from "../utils/blogs-manager";
 //test all endpoint and all status codes
 
 describe("Blogs", () => {
+  const client = new MongoClient(mongoURI);
+
   beforeEach(() => {
     //clear all data before running tests
     return request(app).delete("/testing/all-data");
+  });
+
+  beforeAll(async () => {
+    await client.connect();
+  });
+
+  afterAll(async () => {
+    await client.close();
   });
 
   //POST /blogs 201

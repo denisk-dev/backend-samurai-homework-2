@@ -1,55 +1,37 @@
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
+import { client } from "./db";
+import { ObjectId } from "mongodb";
 
 export type Blog = {
-  id: ReturnType<typeof uuidv4>;
   name: string;
   description: string;
   websiteUrl: string;
 };
 
-export let blogs: Array<Blog> = [
-  //   {
-  //     id: "uuidq",
-  //     name: "Blog 1",
-  //     description: "Content 1",
-  //     websiteUrl: "https://www.blog1.com",
-  //   },
-];
+const blogs = client.db("samurai").collection("blogs");
 
 export const blogsRepository = {
-  create(blog: Blog) {
-    if (blog) {
-      blogs.push(blog);
-      return true;
-    } else {
-      return false;
-    }
+  async create(blog: Blog) {
+    const result = await blogs.insertOne(blog);
+    return result.insertedId.toString();
   },
-  findAll() {
-    return blogs;
+  async findAll() {
+    return blogs.find().toArray();
   },
-  findById(id: string) {
-    return blogs.find((blog) => blog.id === id);
+
+  async findById(id: string) {
+    return blogs.findOne({ _id: new ObjectId(id) });
   },
-  deleteById(id: string) {
-    const blogIndex = blogs.findIndex((blog) => blog.id === id);
-    if (blogIndex !== -1) {
-      blogs.splice(blogIndex, 1);
-      return true;
-    } else {
-      return false;
-    }
+  async deleteById(id: string) {
+    const result = await blogs.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount === 1;
   },
-  updateById(id: string, blog: Blog) {
-    const blogIndex = blogs.findIndex((blog) => blog.id === id);
-    if (blogIndex !== -1) {
-      blogs[blogIndex] = blog;
-      return true;
-    } else {
-      return false;
-    }
+  async updateById(id: string, blog: Blog) {
+    const result = await blogs.replaceOne({ _id: new ObjectId(id) }, blog);
+    return result.modifiedCount === 1;
   },
-  deleteAll() {
-    blogs = [];
+  async deleteAll() {
+    //drop the blogs collection
+    await blogs.drop();
   },
 };

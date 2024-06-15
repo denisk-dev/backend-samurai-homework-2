@@ -1,5 +1,5 @@
 import request from "supertest";
-import { app } from "../../src/index";
+import { app } from "../../src/setting";
 import { postsTestManager } from "../utils/posts-manager";
 import { blogsTestManager } from "../utils/blogs-manager";
 
