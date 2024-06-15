@@ -69,7 +69,7 @@ describe("Blogs", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body).toEqual({
-      errorMessages: [
+      errorsMessages: [
         { message: "Name is required", field: "name" },
         { message: "Description is required", field: "description" },
         { message: "Website URL must be a valid URL", field: "websiteUrl" },
@@ -218,7 +218,7 @@ describe("Blogs", () => {
 
     expect(responseUpdate.statusCode).toBe(400);
     expect(responseUpdate.body).toEqual({
-      errorMessages: [
+      errorsMessages: [
         { message: "Name must not exceed 15 characters", field: "name" },
         { message: "Description is required", field: "description" },
         { message: "Website URL must be a valid URL", field: "websiteUrl" },

@@ -34,8 +34,6 @@ router.post(
   (req: Request, res: Response) => {
     const { name, description, websiteUrl } = req.body;
 
-    console.log(typeof description);
-
     const id = uuidv4();
 
     const blog = {

@@ -8,14 +8,16 @@ export const sendErrorsIfAnyMiddleware = (
 ) => {
   const result = validationResult(req);
 
-  const errorMessages = result.array({ onlyFirstError: true }).map((error) => ({
-    message: error.msg,
-    // @ts-ignore
-    field: error.path,
-  }));
+  const errorsMessages = result
+    .array({ onlyFirstError: true })
+    .map((error) => ({
+      message: error.msg,
+      // @ts-ignore
+      field: error.path,
+    }));
 
-  if (errorMessages.length > 0) {
-    return res.status(400).json({ errorMessages });
+  if (errorsMessages.length > 0) {
+    return res.status(400).json({ errorsMessages });
   }
 
   return next();

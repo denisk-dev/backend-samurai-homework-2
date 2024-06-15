@@ -73,7 +73,7 @@ describe("Posts", () => {
     });
 
     expect(response.body).toEqual({
-      errorMessages: [
+      errorsMessages: [
         { message: "Title must not exceed 30 characters", field: "title" },
         { message: "Short description is required", field: "shortDescription" },
         { message: "Content is required", field: "content" },
