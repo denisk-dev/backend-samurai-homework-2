@@ -2,14 +2,6 @@ import { body } from "express-validator";
 import { blogsRepository } from "../../repositories/blogs-repo";
 
 export const createUpdateBodyValidationMiddleware = [
-  body("title")
-    .trim()
-    .notEmpty()
-    .withMessage("Title is required")
-    .isString()
-    .withMessage("Title must be a string")
-    .isLength({ max: 30 })
-    .withMessage("Title must not exceed 30 characters"),
   body("shortDescription")
     .trim()
     .notEmpty()
@@ -18,6 +10,15 @@ export const createUpdateBodyValidationMiddleware = [
     .withMessage("Short description must be a string")
     .isLength({ max: 100 })
     .withMessage("Short description must not exceed 100 characters"),
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Title is required")
+    .isString()
+    .withMessage("Title must be a string")
+    .isLength({ max: 30 })
+    .withMessage("Title must not exceed 30 characters"),
+
   body("content")
     .trim()
     .notEmpty()
