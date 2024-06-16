@@ -37,11 +37,10 @@ export const createUpdateBodyValidationMiddleware = [
       const blog = await blogsRepository.findById(value);
 
       if (!blog) {
-        return false;
+        throw new Error("Invalid blog Id");
       }
 
       req.body.blogName = blog.name;
-
-      return true;
-    }),
+    })
+    .withMessage("Invalid value"),
 ];

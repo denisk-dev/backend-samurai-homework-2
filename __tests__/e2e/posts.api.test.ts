@@ -2,12 +2,30 @@ import request from "supertest";
 import { app } from "../../src/setting";
 import { postsTestManager } from "../utils/posts-manager";
 import { blogsTestManager } from "../utils/blogs-manager";
+import dotenv from "dotenv";
+import { MongoClient } from "mongodb";
+dotenv.config();
+
+const mongoURI = process.env.MONGO_URI || `mongodb://0.0.0.0:27017/samurai`;
+
+//MAKE SURE TESTS ARE ISOLATED
 
 describe("Posts", () => {
+  const client = new MongoClient(mongoURI);
+
   beforeEach(() => {
     //clear all data before running tests
     return request(app).delete("/testing/all-data");
   });
+
+  beforeAll(async () => {
+    await client.connect();
+  });
+
+  afterAll(async () => {
+    await client.close();
+  });
+
   //POST /posts 201
   it("should create a new post and return 201 status", async () => {
     //create a blog first
@@ -39,6 +57,7 @@ describe("Posts", () => {
     expect(response.body.content).toBe(data.content);
     expect(response.body.blogId).toBe(data.blogId);
     expect(response.body.blogName).toBe(blogData.name);
+    expect(response.body.createdAt).toBeDefined();
   });
 
   //POST /posts 401
@@ -74,8 +93,8 @@ describe("Posts", () => {
 
     expect(response.body).toEqual({
       errorsMessages: [
-        { message: "Title must not exceed 30 characters", field: "title" },
         { message: "Short description is required", field: "shortDescription" },
+        { message: "Title must not exceed 30 characters", field: "title" },
         { message: "Content is required", field: "content" },
         {
           field: "blogId",
@@ -225,6 +244,7 @@ describe("Posts", () => {
     expect(responseGet.body.content).toBe(updatedData.content);
     expect(responseGet.body.blogId).toBe(updatedData.blogId);
     expect(responseGet.body.blogName).toBe(blogData.name);
+    expect(responseGet.body.createdAt).toBeDefined();
   });
 
   //PUT /posts/:id 404
@@ -316,6 +336,59 @@ describe("Posts", () => {
     );
 
     expect(responseGet.body).toEqual(postResponse.body);
+  });
+
+  //PUT /posts/:id 400
+  it("should return 400 for incorrect body", async () => {
+    //create a blog first
+    const blogData = {
+      name: "Blog 1",
+      description: "Description 1",
+      websiteUrl: "https://www.blog1.com",
+    };
+
+    const blogResponse = await blogsTestManager.createBlog(blogData, {
+      expectedStatusCode: 201,
+      isAuthorized: true,
+    });
+
+    const data = {
+      title: "Post 1",
+      shortDescription: "Description 1",
+      content: "Content 1",
+      blogId: blogResponse.body.id,
+    };
+
+    const postResponse = await postsTestManager.createPost(data, {
+      expectedStatusCode: 201,
+      isAuthorized: true,
+    });
+
+    const updatedData = {
+      title: "Post 1 fdgsdfgergfsgergdfgfg13123123123131",
+      blogId: "123",
+    };
+
+    const response = await postsTestManager.updatePost(
+      updatedData,
+      postResponse.body.id,
+      {
+        expectedStatusCode: 400,
+        isAuthorized: true,
+      }
+    );
+
+    expect(response.body).toEqual({
+      errorsMessages: [
+        { message: "Short description is required", field: "shortDescription" },
+        { message: "Title must not exceed 30 characters", field: "title" },
+        { message: "Content is required", field: "content" },
+        {
+          field: "blogId",
+          message: "Invalid value",
+        },
+      ],
+    });
   });
 
   it("should return 3 posts", async () => {

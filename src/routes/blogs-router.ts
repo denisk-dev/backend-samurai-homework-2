@@ -9,7 +9,13 @@ const router = express.Router();
 // Read all blogs
 router.get("/", async (req: Request, res: Response) => {
   const blogs = await blogsRepository.findAll();
-  res.status(200).json(blogs);
+  return res.status(200).json(
+    blogs.map((blog) => ({
+      ...blog,
+      id: blog._id.toString(),
+      _id: undefined,
+    }))
+  );
 });
 
 // Read one blog
@@ -17,7 +23,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
   const blog = await blogsRepository.findById(id);
   if (blog) {
-    res.status(200).json({ ...blog, id: blog._id, _id: undefined });
+    res.status(200).json({ ...blog, id: blog._id.toString(), _id: undefined });
   } else {
     res.sendStatus(404);
   }

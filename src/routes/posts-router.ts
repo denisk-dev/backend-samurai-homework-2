@@ -9,14 +9,16 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const posts = await postsRepository.findAll();
-  res.send(posts);
+  res.send(
+    posts.map((post) => ({ ...post, id: post._id.toString(), _id: undefined }))
+  );
 });
 
 router.get("/:id", async (req, res) => {
   const id = req.params.id;
   const post = await postsRepository.findById(id);
   if (post) {
-    res.status(200).json(post);
+    res.status(200).json({ ...post, id: post._id.toString(), _id: undefined });
   } else {
     res.sendStatus(404);
   }
@@ -42,7 +44,11 @@ router.post(
 
     const createdPost = await postsRepository.findById(insertedId);
 
-    return res.status(201).json(createdPost);
+    if (!createdPost) return res.sendStatus(500);
+
+    return res
+      .status(201)
+      .json({ ...createdPost, id: createdPost._id.toString(), _id: undefined });
   }
 );
 

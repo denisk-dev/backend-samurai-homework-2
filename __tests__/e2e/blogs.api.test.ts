@@ -5,16 +5,9 @@ import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 dotenv.config();
 
-const dbName = "blogs";
-const mongoURI = process.env.MONGO_URI || `mongodb://0.0.0.0:27017/${dbName}`;
+const mongoURI = process.env.MONGO_URI || `mongodb://0.0.0.0:27017/samurai`;
 
-//LIST OF TODOS
-//TODO tests need to be isolated from each other
-//add test manager to blogs and posts
-//add a test for delete and get all
-//full isolation?
-//Need to setup so that when running yarn test I don't get error and etc.
-//test all endpoint and all status codes
+//MAKE SURE TESTS ARE ISOLATED
 
 describe("Blogs", () => {
   const client = new MongoClient(mongoURI);
@@ -48,6 +41,9 @@ describe("Blogs", () => {
     expect(response.body.name).toBe(data.name);
     expect(response.body.description).toBe(data.description);
     expect(response.body.websiteUrl).toBe(data.websiteUrl);
+
+    expect(response.body.createdAt).toBeDefined();
+    expect(response.body.isMembership).toBe(false);
 
     // now test that the blog was created
     const responseGet = await request(app).get(`/blogs/${response.body.id}`);
@@ -86,9 +82,9 @@ describe("Blogs", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body).toEqual({
       errorsMessages: [
+        { message: "Website URL must be a valid URL", field: "websiteUrl" },
         { message: "Name is required", field: "name" },
         { message: "Description is required", field: "description" },
-        { message: "Website URL must be a valid URL", field: "websiteUrl" },
       ],
     });
     //now test that the blog was not created
@@ -130,10 +126,14 @@ describe("Blogs", () => {
 
     // now test that the blog was updated
     const responseGet = await request(app).get(`/blogs/${response.body.id}`);
-    expect(responseGet.body).toEqual({
-      ...updatedBlog,
-      id: response.body.id,
-    });
+    expect(responseGet.body).toEqual(
+      expect.objectContaining({
+        ...updatedBlog,
+        id: response.body.id,
+        isMembership: false,
+        createdAt: expect.any(String),
+      })
+    );
   });
 
   //PUT /blogs/:id 404
@@ -235,9 +235,9 @@ describe("Blogs", () => {
     expect(responseUpdate.statusCode).toBe(400);
     expect(responseUpdate.body).toEqual({
       errorsMessages: [
+        { message: "Website URL must be a valid URL", field: "websiteUrl" },
         { message: "Name must not exceed 15 characters", field: "name" },
         { message: "Description is required", field: "description" },
-        { message: "Website URL must be a valid URL", field: "websiteUrl" },
       ],
     });
 
